@@ -3,15 +3,6 @@
 // Module dinh KET HOP: giu nguyen Ethernet echo + them AXI-Full de PS doc
 // du lieu nhan duoc.
 //
-// Y tuong:
-//   - Phan Ethernet (udp_loop_top logic) van tu dong echo nhu cu.
-//   - Moi khi nhan duoc 1 word du lieu (rxd_wr_en), ta "re nhanh" du lieu do
-//     dua sang khoi AXI slave qua tin hieu rx_data_in/rx_done_in.
-//   - PS doc thanh ghi reg3 (du lieu) va reg2 (co bao nhan) qua AXI-Full.
-//
-// Luu y dong bo clock: du lieu Ethernet o mien gmii_rxc, AXI o mien S_AXI_ACLK.
-// Ban toi gian nay dung mot tang flip-flop dong bo (2-FF) cho tin hieu rx_done.
-// De chac chan hon co the dung FIFO bat dong bo - se ghi chu o bao cao.
 //=============================================================================
 module top_axi_eth #
 (
@@ -19,7 +10,7 @@ module top_axi_eth #
     parameter integer C_S_AXI_ADDR_WIDTH = 6
 )
 (
-    // ----- Chan vat ly Ethernet (giong udp_loop_top) -----
+    // ----- Chan vat ly Ethernet -----
     input              eth_clk   ,  // 50MHz
     input              eth_rst_n ,
     input              phy_rxc   ,
@@ -65,9 +56,9 @@ module top_axi_eth #
 
     //=========================================================================
     // 1) KHOI ETHERNET - giu nguyen logic echo (instance udp_loop_top)
-    //    udp_loop_top da tu xu ly echo + in hoa, ta khong sua.
+    //    udp_loop_top da tu xu ly echo + in hoa.
     //    Ta can lay tin hieu rxd_wr_en / rxd_wr_data ra ngoai de re nhanh.
-    //    => Can them 2 output vao udp_loop_top (xem ghi chu ben duoi).
+    //    => Can them 2 output vao udp_loop_top.
     //=========================================================================
     wire        rxd_wr_en_w;
     wire [31:0] rxd_wr_data_w;
@@ -85,7 +76,6 @@ module top_axi_eth #
         .linkspeed  (linkspeed),
         .mdc        (mdc),
         .mdio       (mdio),
-        // 2 cong moi can them vao udp_loop_top:
         .rxd_wr_en_o   (rxd_wr_en_w),
         .rxd_wr_data_o (rxd_wr_data_w)
     );
@@ -121,9 +111,8 @@ module top_axi_eth #
     // Phat hien thay doi (co word moi) o mien AXI
     wire rx_done_edge = (flag_s2 ^ flag_s3);
 
-    // SUA LOI CDC (phat hien qua mo phong): chot du lieu TRUOC khi phat hien
-    // canh, roi tre co rx_done 1 nhip. Dam bao rx_data_axi da on dinh truoc
-    // khi axi_full_slave chot vao reg3 (neu khong, reg3 bi tre 1 word).
+    //Dam bao rx_data_axi da on dinh truoc
+    // khi axi_full_slave chot vao reg3.
     reg [31:0] rx_data_axi;
     reg        rx_done_axi;
     always @(posedge S_AXI_ACLK or negedge S_AXI_ARESETN) begin
@@ -137,7 +126,7 @@ module top_axi_eth #
     end
 
     //=========================================================================
-    // 3) KHOI AXI-FULL SLAVE (tu viet) - PS doc du lieu nhan
+    // 3) KHOI AXI-FULL SLAVE - PS doc du lieu nhan
     //=========================================================================
     wire [31:0] tx_data_unused;
     wire        tx_start_unused;
@@ -146,7 +135,7 @@ module top_axi_eth #
         .C_S_AXI_DATA_WIDTH (C_S_AXI_DATA_WIDTH),
         .C_S_AXI_ADDR_WIDTH (C_S_AXI_ADDR_WIDTH)
     ) u_axi (
-        .tx_data_reg (tx_data_unused),   // huong nay chua dung (giu echo)
+        .tx_data_reg (tx_data_unused),   
         .tx_start    (tx_start_unused),
         .rx_data_in  (rx_data_axi),      // du lieu Ethernet nhan duoc
         .rx_done_in  (rx_done_axi),      // co bao nhan xong (mien AXI)
