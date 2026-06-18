@@ -1,8 +1,6 @@
 //=============================================================================
 // axi_full_slave.v
-// AXI4-Full Slave TU VIET (khong dung wizard)
 // Hien thuc day du 5 kenh: AW, W, B, AR, R + bat tay VALID/READY
-//
 // Chuc nang: cung cap 8 thanh ghi 32-bit cho PS doc/ghi qua AXI-Full.
 //   reg0 (offset 0x00): PS ghi du lieu can gui (4 ky tu/word)
 //   reg1 (offset 0x04): PS ghi lenh - bit0 = start gui
@@ -10,7 +8,6 @@
 //   reg3 (offset 0x0C): PL ghi du lieu nhan duoc tu Ethernet
 //   reg4..reg7        : du phong / mo rong
 //
-// Ghi chu: day la ban TOI GIAN nhung dung giao thuc AXI4-Full that.
 // Burst duoc ho tro qua con tro dia chi tang dan theo AWLEN/ARLEN.
 //=============================================================================
 module axi_full_slave #
