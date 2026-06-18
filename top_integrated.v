@@ -2,15 +2,8 @@
 // top_integrated.v  -  MODULE TOP TICH HOP (1 bitstream duy nhat)
 //
 // Muc dich: gop Ethernet + AXI4-Full + PS trong CUNG MOT thiet ke, khac phuc
-//   loi clk_wiz khong khoa pha khi Ethernet bi wrap vao Block Design.
 //
 // Y tuong khac phuc (DA XAC DINH tu qua trinh debug):
-//   - Loi cu: khi top_axi_eth nam TRONG Block Design, xung eth_clk di qua
-//     nhieu tang (port BD -> wrapper -> IP) nen clk_wiz khong nhan duoc xung
-//     truc tiep tu chan vat ly -> khong khoa pha (log bao "Removing redundant
-//     IBUF ... not directly connected to top level port").
-//   - Cach sua: dat top.v RTL nay LAM TOP THAT. clk_wiz (ben trong top_axi_eth)
-//     nhan xung eth_clk_50m noi TRUC TIEP tu chan K17 (top-level port) -> lock.
 //   - Block Design chi chua PS (ZYNQ7), xuat giao dien M_AXI_GP0 ra ngoai
 //     duoi dang external interface. top.v noi M_AXI_GP0 <-> S_AXI cua top_axi_eth.
 //
@@ -18,8 +11,7 @@
 //   - Trong Block Design, giu AXI SmartConnect, xuat M00_AXI ra external.
 //   - design_1_wrapper se co cac cong M00_AXI_* . Noi chung vao S_AXI_* o day.
 //   - Ten cong duoi day theo chuan Vivado sinh ra cho 1 master AXI4 32-bit,
-//     ADDR width 6 (khop axi_full_slave). Neu Vivado sinh ten/khac width,
-//     chinh lai cho khop (xem ghi chu cuoi file).
+//     ADDR width 6 (khop axi_full_slave).
 //=============================================================================
 module top_integrated
 (
@@ -97,7 +89,6 @@ module top_integrated
 
     //=========================================================================
     // 2) Block Design chi chua PS - xuat M00_AXI external
-    //    (Ten instance/cong theo wrapper Vivado sinh ra; chinh cho khop neu khac)
     //=========================================================================
     design_1_wrapper u_ps (
         // DDR + FIXED_IO
@@ -131,7 +122,7 @@ module top_integrated
 
     //=========================================================================
     // 3) Khoi Ethernet + AXI slave. clk_wiz BEN TRONG nhan eth_clk_50m TRUC TIEP
-    //    tu chan K17 (top-level) -> KHOA PHA DUOC (khac phuc loi cu).
+    //    tu chan K17 (top-level) -> KHOA PHA DUOC.
     //=========================================================================
     top_axi_eth u_eth_axi (
         // Ethernet - eth_clk noi TRUC TIEP chan K17
@@ -179,21 +170,3 @@ module top_integrated
 
 endmodule
 
-//=============================================================================
-// GHI CHU QUAN TRONG khi dung file nay:
-//
-// 1) Ten cong cua design_1_wrapper PHAI khop voi ten Vivado sinh ra. Sau khi
-//    sua Block Design (xuat M00_AXI + FCLK_CLK0 + peripheral_aresetn external),
-//    mo file design_1_wrapper.v de xem ten cong chinh xac, roi sua lai cho khop.
-//    Vi du Vivado co the dat ten "M00_AXI_0_awaddr" thay vi "M00_AXI_awaddr".
-//
-// 2) Cach xuat M00_AXI ra external trong Block Design:
-//    - Mo BD, click chuot phai len cong M00_AXI cua axi_smc -> Make External.
-//    - Tuong tu cho FCLK_CLK0 va peripheral_aresetn (cong cua rst_ps7).
-//    - Generate Output Products -> Create HDL Wrapper (chon "let Vivado manage").
-//
-// 3) Dat top_integrated.v lam Top module (Set as Top).
-//
-// 4) XDC: gan eth_clk_50m -> K17, sys_rst_n -> nut reset, cac chan phy_* theo
-//    bang gan chan cu (eth_axi_all.xdc). DDR/FIXED_IO khong can gan (PS tu lo).
-//=============================================================================
